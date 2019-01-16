@@ -66,7 +66,9 @@ router.post('/users', function(req, res, next){
   user.username = req.body.user.username;
   user.email = req.body.user.email;
   user.setPassword(req.body.user.password);
+  user.role = req.body.user.role;
 
+  console.log('userrrr' + user);
   user.save().then(function(){
     return res.json({user: user.toAuthJSON()});
   }).catch(next);

@@ -36,6 +36,7 @@ UserSchema.methods.generateJWT = function() {
   return jwt.sign({
     id: this._id,
     username: this.username,
+    role: this.role,
     exp: parseInt(exp.getTime() / 1000),
   }, secret);
 };
@@ -44,6 +45,7 @@ UserSchema.methods.toAuthJSON = function(){
   return {
     username: this.username,
     email: this.email,
+    role: this.role,
     token: this.generateJWT(),
     bio: this.bio,
     image: this.image
