@@ -23,7 +23,7 @@ router.param('comment', function(req, res, next, id) {
     if(!comment) { return res.sendStatus(404); }
 
     req.comment = comment;
-
+    console.log('comment' + req.comment);
     return next();
   }).catch(next);
 });
@@ -131,7 +131,7 @@ router.post('/', auth.required, function(req, res, next) {
     article.author = user;
 
     return article.save().then(function(){
-      console.log(article.author);
+      console.log('article object' + article);
       return res.json({article: article.toJSONFor(user)});
     });
   }).catch(next);
@@ -239,6 +239,7 @@ router.get('/:article/comments', auth.optional, function(req, res, next){
     }).execPopulate().then(function(article) {
       return res.json({comments: req.article.comments.map(function(comment){
         return comment.toJSONFor(user);
+        
       })});
     });
   }).catch(next);
@@ -254,9 +255,9 @@ router.post('/:article/comments', auth.required, function(req, res, next) {
     comment.author = user;
 
     return comment.save().then(function(){
-      req.article.comments.push(comment);
+      req.article.comments = req.article.comments.concat([comment]);
 
-      return req.article.save().then(function(article) {
+      return req.article.save().then(function() {
         res.json({comment: comment.toJSONFor(user)});
       });
     });
