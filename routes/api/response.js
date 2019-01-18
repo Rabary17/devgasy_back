@@ -24,13 +24,6 @@ router.post('/add', auth.required, function(req, res, next){
         response.comment = comment.id;
         response.author = resolve[0];
 
-        // return response.save().then(function(){
-
-        //   comment.response = comment.response.concat([response]);
-
-        //   return res.json({response: response.toAuthJSON()});
-
-        // }).catch(next);
 
         return response.save().then(function(){
           comment.response = comment.response.concat([response]);
@@ -43,8 +36,32 @@ router.post('/add', auth.required, function(req, res, next){
       })
 
     })
-
-
 });
+
+router.post('/:commentId', auth.required, function(req, res, next) {
+    // console.log('request payload oooooooooooo ' + (req.body.response.body));
+    
+    Promise.resolve(Comment.findById(req.body.response.body)).then(function(response){
+      
+      return response.populate({
+        path: 'response',
+        populate: {
+          path: 'author'
+        },
+        options: {
+          sort: {
+            createdAt: 'desc'
+          }
+        }
+      }).execPopulate().then(function(response) {
+
+        console.log('response promises' + (response));
+
+        return res.json({responses: response});
+      });
+      
+    }).catch(next);
+
+  })
 
   module.exports = router;
