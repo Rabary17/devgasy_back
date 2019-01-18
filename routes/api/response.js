@@ -6,7 +6,7 @@ var Response = mongoose.model('Response');
 var Comment = mongoose.model('Comment');
 var auth = require('../auth');
 
-
+// post a new response
 router.post('/add', auth.required, function(req, res, next){
 
     Comment.findById(req.body.response.body.commentId).then(function(comment){
@@ -24,22 +24,26 @@ router.post('/add', auth.required, function(req, res, next){
         response.comment = comment.id;
         response.author = resolve[0];
 
-        console.log('comment' + comment.id);
-        // response.comment = req.body.response.comment;
-        // response.user = req.body.response.user;
-     
-        // res.sendStatus(401)
-        // console.log('commentaire introuvable')
-    
-        response.save().then(function(){
-          console.log('req.comment' + JSON.stringify(comment));
+        // return response.save().then(function(){
+
+        //   comment.response = comment.response.concat([response]);
+
+        //   return res.json({response: response.toAuthJSON()});
+
+        // }).catch(next);
+
+        return response.save().then(function(){
           comment.response = comment.response.concat([response]);
-          return res.json({response: response.toAuthJSON()});
+    
+          return comment.save().then(function() {
+            res.json({response: response.toAuthJSON()});
+          });
         }).catch(next);
+
       })
 
     })
-    
+
 
 });
 
