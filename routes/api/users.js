@@ -12,6 +12,17 @@ router.get('/user', auth.required, function(req, res, next){
   }).catch(next);
 });
 
+router.get('/alluser', auth.required, function(req, res, next){
+  User.find().then(function(user){
+    if(!user){ return res.sendStatus(401); }
+    let listuser = [];
+    user.forEach( res => {
+      listuser.push(res.toProfileJSONFor())
+    })
+    return res.json({user: listuser});
+  }).catch(next);
+});
+
 router.put('/user', auth.required, function(req, res, next){
   User.findById(req.payload.id).then(function(user){
     if(!user){ return res.sendStatus(401); }
