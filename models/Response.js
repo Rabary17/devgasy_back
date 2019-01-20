@@ -21,7 +21,7 @@ ResponseSchema.methods.toAuthJSON = function(user){
   return {
     id: this.id,
     body: this.body,
-    author: this.author.toProfileJSONFor(user)
+    author: this.author
   };
 };
 
