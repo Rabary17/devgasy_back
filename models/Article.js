@@ -5,6 +5,9 @@ var User = mongoose.model('User');
 
 var ArticleSchema = new mongoose.Schema({
   slug: {type: String, lowercase: true, unique: true},
+  categorie: String,
+  language: String,
+  framework: String,
   title: String,
   description: String,
   body: String,
@@ -41,6 +44,9 @@ ArticleSchema.methods.updateFavoriteCount = function() {
 ArticleSchema.methods.toJSONFor = function(user){
   return {
     slug: this.slug,
+    categorie: this.categorie,
+    language: this.language,
+    framework: this.framework,
     title: this.title,
     description: this.description,
     body: this.body,
