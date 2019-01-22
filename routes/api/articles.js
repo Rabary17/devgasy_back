@@ -277,4 +277,29 @@ router.delete('/:article/comments/:comment', auth.required, function(req, res, n
   }
 });
 
+// search for an article
+// router.get('/search/:keyword', auth.required, function(req, res, next) {
+//   const key = req.params.keyword;
+//    Promise.resolve(req.payload ? User.findById(req.payload.id) : null).then(function(user){
+//       Article.find({title: new RegExp(key, 'i')} || {description: new RegExp(key, 'i')} || {body: new RegExp(key, 'i')}, function(err, docs){
+//       })
+//       .exec().then(res => {
+//         res.map(article => {
+//           console.log('afterdocs' + article.toJSONFor(user))
+//         })
+//         return res;
+//       });
+//   }).catch(next);
+// });
+
+router.get('/search/:keyword', auth.optional, function(req, res, next) {
+  const key = req.params.keyword;
+  Promise.all([
+    Article.find({title: new RegExp(key, 'i')} || {description: new RegExp(key, 'i')} || {body: new RegExp(key, 'i')}, function(err, docs){})
+  ]).then(function(results){
+    var article = results[0];
+    return res.json({article: article});
+  }).catch(next);
+});
+
 module.exports = router;
