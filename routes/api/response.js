@@ -29,7 +29,7 @@ router.post('/add', auth.required, function(req, res, next){
           comment.response = comment.response.concat([response]);
     
           return comment.save().then(function() {
-            res.json({response: response.toAuthJSON()});
+            res.json({response: response.toAuthJSON(resolve[0])});
           });
         }).catch(next);
 

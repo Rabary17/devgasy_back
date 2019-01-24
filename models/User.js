@@ -67,7 +67,6 @@ UserSchema.methods.favorite = function(id){
     // this.favorites.concat(id);
     this.favorites = this.favorites.concat([id]);
   }
-
   return this.save();
 };
 

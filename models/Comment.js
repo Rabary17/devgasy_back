@@ -37,7 +37,7 @@ CommentSchema.methods.unvote = function(idToRemove){
       // console.log('liste des votant apres' + res);
     }
   )
-  return console.log('liste des votant apres' + this.utile);
+  return this.save();
     
 // const items = ['a', 'b', 'c', 'd', 'e', 'f']
 // const valueToRemove = 'c'
