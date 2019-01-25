@@ -283,7 +283,7 @@ router.get('/vote/comments/:comment', auth.required, function(req, res, next) {
   Comment.findById(req.params.comment).then(function(comment){
     if(!comment) { return res.sendStatus(404); }
     comment.vote(req.payload.id);
-    return res.comment;
+    return res.json({comment: comment});
   }).catch(next);
 });
 // unVote 
@@ -293,7 +293,7 @@ router.get('/unvote/comments/:comment', auth.required, function(req, res, next) 
     if(!comment) { return res.sendStatus(404); }
     console.log('liste des votant avant' + comment.utile);
     comment.unvote(req.payload.id);
-    return res.comment;
+    return res.json({comment: comment});
   }).catch(next);
 });
 
