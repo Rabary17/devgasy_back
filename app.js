@@ -11,6 +11,7 @@ var http = require('http'),
 
 var isProduction = process.env.NODE_ENV === 'production';
 
+
 // Create global app object
 var app = express();
 
@@ -42,6 +43,7 @@ require('./models/Article');
 require('./models/Comment');
 require('./models/Response');
 require('./config/passport');
+require('./socket.js');
 
 app.use(require('./routes'));
 
@@ -85,11 +87,16 @@ var server = app.listen( process.env.PORT || 3000, function(){
   console.log('Listening on port ' + server.address().port);
 });
 
+
 let io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
   socket.emit('news', { hello: 'world' });
   socket.on('message', function (data) {
-    console.log(data);
+    console.log('data' + data);
+  });
+
+  socket.on('disconnect', function (data) {
+    console.log('disconnect' + data);
   });
 });

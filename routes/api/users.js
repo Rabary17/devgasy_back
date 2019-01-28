@@ -23,6 +23,17 @@ router.get('/alluser', auth.required, function(req, res, next){
   }).catch(next);
 });
 
+router.get('/allConnectedUser', auth.required, function(req, res, next){
+  User.find({status: true}).then(function(user){
+    if(!user){ return res.sendStatus(401); }
+    let listuser = [];
+    user.forEach( res => {
+      listuser.push(res.toProfileJSONFor())
+    })
+    return res.json({user: listuser});
+  }).catch(next);
+});
+
 router.put('/user', auth.required, function(req, res, next){
   User.findById(req.payload.id).then(function(user){
     if(!user){ return res.sendStatus(401); }
@@ -63,7 +74,14 @@ router.post('/users/login', function(req, res, next){
     if(err){ return next(err); }
 
     if(user){
-      user.token = user.generateJWT();
+      Promise.resolve(
+                User.findById(user.id).then(function(user){
+                  user.status = true;
+                  return user.save();
+                })
+        ).then(
+                user.token = user.generateJWT()
+        )
       return res.json({user: user.toAuthJSON()});
     } else {
       return res.status(422).json(info);
@@ -78,11 +96,19 @@ router.post('/users', function(req, res, next){
   user.email = req.body.user.email;
   user.setPassword(req.body.user.password);
   user.role = req.body.user.role;
-
-  console.log('userrrr' + user);
+  user.status = true;
   user.save().then(function(){
     return res.json({user: user.toAuthJSON()});
   }).catch(next);
+});
+
+router.post('/user/disconnect', function(req, res, next){
+  User.findById(req.body.id).then(function(user){
+  user.status = false;
+  user.save().then(function(){
+    return res.json({res: req.body.id});
+  });
+  })
 });
 
 module.exports = router;

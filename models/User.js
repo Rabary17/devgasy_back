@@ -13,7 +13,8 @@ var UserSchema = new mongoose.Schema({
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Article' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   hash: String,
-  salt: String
+  salt: String,
+  status: Boolean,
 }, {timestamps: true});
 
 UserSchema.plugin(uniqueValidator, {message: 'is already taken.'});
@@ -55,10 +56,12 @@ UserSchema.methods.toAuthJSON = function(){
 
 UserSchema.methods.toProfileJSONFor = function(user){
   return {
+    id: this.id,
     username: this.username,
     bio: this.bio,
     image: this.image || 'https://static.productionready.io/images/smiley-cyrus.jpg',
-    following: user ? user.isFollowing(this._id) : false
+    following: user ? user.isFollowing(this._id) : false,
+    status: this.status
   };
 };
 
@@ -101,4 +104,12 @@ UserSchema.methods.isFollowing = function(id){
   });
 };
 
+UserSchema.methods.setOnline = function(id){
+  this.status = true;
+  return this.save();
+};
+UserSchema.methods.setOffline = function(id){
+  this.status = false;
+  return this.save();
+};
 mongoose.model('User', UserSchema);
