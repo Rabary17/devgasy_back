@@ -16,7 +16,14 @@ var isProduction = process.env.NODE_ENV === 'production';
 var app = express();
 
 app.use(cors());
-
+// Enable CORS from client-side
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 // Normal express config defaults
 app.use(require('morgan')('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -42,6 +49,7 @@ require('./models/User');
 require('./models/Article');
 require('./models/Comment');
 require('./models/Response');
+require('./models/Message');
 require('./config/passport');
 require('./socket.js');
 
@@ -90,13 +98,25 @@ var server = app.listen( process.env.PORT || 3000, function(){
 
 let io = require('socket.io')(server);
 
-io.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('message', function (data) {
-    console.log('data' + data);
-  });
+// tableau id des utilisateurs connécté
+let userConnected = [{}];
 
-  socket.on('disconnect', function (data) {
-    console.log('disconnect' + data);
-  });
+// Listening des connexions des utilisateurs
+io.on('connection', function (socket) {
+  // Gestion des utilisateurs
+  socket.on('userConnected', function(res){
+    // Notification coté front si nouvelle utilisateur expecté l'user qui vient de se connecter
+    socket.broadcast.emit('notifUserConnected', {message: res.username + 'est maintenant connécté'});
+    // envoi du message de bienvenue pour l'user connécté
+    io.sockets.connected[socket.id].emit('welcomeMessage', 'Hello, you\'re welcome' + res.username);
+    // mise à jour du tableau user connécté coté serveur
+    userConnected.unshift({id: res.user, username: res.username, socketId: socket.id});
+    // mise à jour du tableau user connécté coté client
+    io.emit('listeConnectedUser', userConnected);
+
+    // déconnéction d'un utilisateur
+    socket.on('manual-disconnection', function(socketId) {
+      console.log(socketId + ' est déconnécté');
+    });
+  })
 });
