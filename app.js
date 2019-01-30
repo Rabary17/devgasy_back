@@ -130,7 +130,7 @@ io.on('connection', function (socket) {
   });
 
   // déconnéction d'un utilisateur
-  socket.on('manual-disconnection', function(socket) {
+  socket.on('disconnect', function(socket) {
     console.log(JSON.stringify(socket) + ' est déconnécté');
   });
 
