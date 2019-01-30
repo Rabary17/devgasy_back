@@ -99,24 +99,40 @@ var server = app.listen( process.env.PORT || 3000, function(){
 let io = require('socket.io')(server);
 
 // tableau id des utilisateurs connécté
-let userConnected = [{}];
+let userConnected = {};
 
 // Listening des connexions des utilisateurs
 io.on('connection', function (socket) {
   // Gestion des utilisateurs
+
   socket.on('userConnected', function(res){
     // Notification coté front si nouvelle utilisateur expecté l'user qui vient de se connecter
     socket.broadcast.emit('notifUserConnected', {message: res.username + 'est maintenant connécté'});
     // envoi du message de bienvenue pour l'user connécté
     io.sockets.connected[socket.id].emit('welcomeMessage', 'Hello, you\'re welcome' + res.username);
     // mise à jour du tableau user connécté coté serveur
-    userConnected.unshift({id: res.user, username: res.username, socketId: socket.id});
+    userConnected[res.user] = {id: res.user, username: res.username, socketId: socket.id};
     // mise à jour du tableau user connécté coté client
     io.emit('listeConnectedUser', userConnected);
-
-    // déconnéction d'un utilisateur
-    socket.on('manual-disconnection', function(socketId) {
-      console.log(socketId + ' est déconnécté');
-    });
   })
+
+  // Gestion des messages privées
+  socket.on('message', (message) => {
+      for (var k in userConnected) {
+        if (k === JSON.parse(message).idReceveur) {
+          console.log('condition socket destinataire  ' + userConnected[k].socketId);
+          io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
+          console.log('Private message ' + userConnected[k].socketId +'msg: ' + message.message);
+        }
+      }
+    // console.log('idReceveur' + idReceveur);
+    // io.emit('message', {type:'new-message', text: message});    
+  });
+
+  // déconnéction d'un utilisateur
+  socket.on('manual-disconnection', function(socket) {
+    console.log(socket.id + ' est déconnécté');
+  });
+
+
 });
