@@ -119,7 +119,7 @@ io.on('connection', function (socket) {
   // Gestion des messages privées
   socket.on('message', (message) => {
       for (var k in userConnected) {
-        if (k === JSON.parse(message).idReceveur) {
+        if (k === message.idReceveur) {
           console.log('condition socket destinataire  ' + userConnected[k].socketId);
           io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
           console.log('Private message ' + userConnected[k].socketId +'msg: ' + message.message);
@@ -131,7 +131,7 @@ io.on('connection', function (socket) {
 
   // déconnéction d'un utilisateur
   socket.on('manual-disconnection', function(socket) {
-    console.log(socket.id + ' est déconnécté');
+    console.log(JSON.stringify(socket) + ' est déconnécté');
   });
 
 
