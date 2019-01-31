@@ -126,8 +126,23 @@ io.on('connection', function (socket) {
         }
       }
     // console.log('idReceveur' + idReceveur);
-    // io.emit('message', {type:'new-message', text: message});    
+    // io.emit('message', {type:'new-message', text: message});
+  
+    // Liste des utilisateurs connécté on demand
+    if (message === 'getAllUserConnected') {
+      const tab = [];
+      for (const key in userConnected) {
+        if (userConnected.hasOwnProperty(key)) {
+          tab.push(userConnected[key]);
+        }
+      }
+      io.emit('listeConnectedUser', tab);
+    }
   });
+
+
+
+
 
   // déconnéction d'un utilisateur
   socket.on('disconnect', function(socket) {
