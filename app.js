@@ -50,6 +50,7 @@ require('./models/Article');
 require('./models/Comment');
 require('./models/Response');
 require('./models/Message');
+require('./models/Room');
 require('./config/passport');
 require('./socket.js');
 
@@ -118,9 +119,20 @@ io.on('connection', function (socket) {
 
   // Gestion des messages privées
   socket.on('message', (message) => {
+    // Persister les mp dans mongodb
+    // create room first
+    if ( message.tag === 'mp') {
+      saveToDatabase(message).then(function(res) {
+        console.log(res);
+      })
+    }
+
+    // then insert message to room
+
     console.log(message.message);
     console.log('userConnected length' + JSON.stringify(userConnected.length));
     console.log('message tag ' + JSON.stringify(message.tag));
+
       for (var k in userConnected) {
         console.log('userConnected k ' + JSON.stringify(userConnected[k]));
         if (k === message.idReceveur) {
@@ -133,6 +145,7 @@ io.on('connection', function (socket) {
           console.log('force to emit');
         }
       }
+
     // console.log('idReceveur' + idReceveur);
     // io.emit('message', {type:'new-message', text: message});
   
@@ -177,3 +190,22 @@ io.on('connection', function (socket) {
 
 
 });
+
+function saveToDatabase(params) {
+  var Room = mongoose.model('Room');
+  var Message = mongoose.model('Message');
+
+  var message = new Message();
+  message.body = params.message;
+  message.sender = params.idEnvoyeur;
+
+  var room = new Room();
+  room.name = params.idEnvoyeur + params.idReceveur;
+  
+  return message.save().then(function(msg){
+    room.message = room.message.concat([msg]);
+    room.save().then(function(res){
+      return res;
+    })
+  });
+}
