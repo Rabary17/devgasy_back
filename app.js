@@ -103,8 +103,8 @@ let userConnected = {};
 
 // Listening des connexions des utilisateurs
 io.on('connection', function (socket) {
+  
   // Gestion des utilisateurs
-
   socket.on('userConnected', function(res){
     // Notification coté front si nouvelle utilisateur expecté l'user qui vient de se connecter
     socket.broadcast.emit('notifUserConnected', {message: res.username + 'est maintenant connécté'});
