@@ -118,11 +118,19 @@ io.on('connection', function (socket) {
 
   // Gestion des messages privées
   socket.on('message', (message) => {
+    console.log(message.message);
+    console.log('userConnected length' + JSON.stringify(userConnected.length));
+    console.log('message tag ' + JSON.stringify(message.tag));
       for (var k in userConnected) {
+        console.log('userConnected k ' + JSON.stringify(userConnected[k]));
         if (k === message.idReceveur) {
           console.log('condition socket destinataire  ' + userConnected[k].socketId);
           io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
-          console.log('Private message ' + userConnected[k].socketId +'msg: ' + message.message);
+          console.log('Private message to ' + userConnected[k].socketId +' msg: ' + message.message);
+        } else if (userConnected.length === 1 && message.tag === 'mp') {
+          console.log('user not found');
+          io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
+          console.log('force to emit');
         }
       }
     // console.log('idReceveur' + idReceveur);
@@ -130,14 +138,32 @@ io.on('connection', function (socket) {
   
     // Liste des utilisateurs connécté on demand
     if (message === 'getAllUserConnected') {
-      const tab = [];
-      for (const key in userConnected) {
-        if (userConnected.hasOwnProperty(key)) {
-          tab.push(userConnected[key]);
+        const tabAj = [];
+        for (const key in userConnected) {
+          if (userConnected.hasOwnProperty(key)) {
+            tabAj.push(userConnected[key]);
+          }
         }
-      }
-      io.emit('listeConnectedUser', tab);
+        io.emit('listeConnectedUser', tabAj);
     }
+
+    // Gestion déconnection utilisateur
+    if (message.message === 'disconnect') {
+      var tab = [];
+        for (const key in userConnected) {
+          if (userConnected.hasOwnProperty(key) && key !== message.idUser) {
+            tab.push(userConnected[key]);
+          } else if (userConnected.hasOwnProperty(key) && key === message.idUser) {
+            io.sockets.connected[userConnected[k].socketId].disconnect();
+            console.log(userConnected[k].socketId + ' vient de se déconnécter');
+          }
+          
+        }
+        userConnected = tab;
+        // io.emit('listeConnectedUser', tab);
+        // console.log('liste updaté moins user déconnécté ' + JSON.stringify(tab));
+    }
+
   });
 
 
@@ -145,9 +171,9 @@ io.on('connection', function (socket) {
 
 
   // déconnéction d'un utilisateur
-  socket.on('disconnect', function(socket) {
-    console.log(JSON.stringify(socket) + ' est déconnécté');
-  });
+  // socket.on('disconnect', function(socket) {
+  //   io.sockets.connected[socket].disconnect();
+  // });
 
 
 });
