@@ -122,9 +122,20 @@ io.on('connection', function (socket) {
     // Persister les mp dans mongodb
     // create room first
     if ( message.tag === 'mp') {
-      saveToDatabase(message).then(function(res) {
-        console.log(res);
+      var roomName = message.idEnvoyeur + message.idReceveur;
+      var Room = mongoose.model('Room');
+      Room.findOne({name: roomName}).then(function(res) {
+        if(!res) { 
+          console.log('room introuvable du coup création room');
+          saveNewRoomToDatabase(message).then(function(res) {
+            console.log(res);
+          });
+      } else if (res) {
+        res.mergeDiscussion(message.message);
+      }
+
       })
+
     }
 
     // then insert message to room
@@ -191,21 +202,21 @@ io.on('connection', function (socket) {
 
 });
 
-function saveToDatabase(params) {
+function saveNewRoomToDatabase(params) {
+
   var Room = mongoose.model('Room');
-  var Message = mongoose.model('Message');
-
-  var message = new Message();
-  message.body = params.message;
-  message.sender = params.idEnvoyeur;
-
+  var User = mongoose.model('User');
   var room = new Room();
-  room.name = params.idEnvoyeur + params.idReceveur;
-  
-  return message.save().then(function(msg){
-    room.message = room.message.concat([msg]);
-    room.save().then(function(res){
+  Promise.resolve(
+    User.findById(params.idReceveur)
+  ).then(function(user) {
+    room.name = params.idEnvoyeur + params.idReceveur;
+    room.message = params.message;
+    room.message.sender = user;
+
+    return room.save().then(function(res){
       return res;
     })
+
   });
 }

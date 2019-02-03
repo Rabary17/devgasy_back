@@ -1,9 +1,10 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
+var Message = require('./Message');
 
 var RoomSchema = new mongoose.Schema({
   name: {type: String, lowercase: true, unique: true},
-  message: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
+  message: [{ type: String }],
 }, {timestamps: true});
 
 // Requires population of author
@@ -15,6 +16,7 @@ RoomSchema.methods.toJSONFor = function(user){
   };
 };
 
+
 RoomSchema.methods.toAuthJSON = function(user){
   return {
     id: this._id,
@@ -24,6 +26,11 @@ RoomSchema.methods.toAuthJSON = function(user){
   };
 };
 
-
+RoomSchema.methods.mergeDiscussion = function(mes){
+    // this.favorites.concat(id);
+            console.log('new Date(now) ' + new Date());
+  this.message = this.message.concat([mes]);
+  return this.save();
+};
 
 mongoose.model('Room', RoomSchema);
