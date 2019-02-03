@@ -126,12 +126,15 @@ io.on('connection', function (socket) {
       var Room = mongoose.model('Room');
       Room.findOne({name: roomName}).then(function(res) {
         if(!res) { 
-          console.log('room introuvable du coup création room');
           saveNewRoomToDatabase(message).then(function(res) {
-            console.log(res);
           });
       } else if (res) {
-        res.mergeDiscussion(message.message);
+        var Message = mongoose.model('Message');
+        var mes = new Message();
+        mes.body = message.message;
+        mes.save().then(function(mes) {
+          res.mergeDiscussion(mes);
+        })
       }
 
       })
@@ -206,17 +209,21 @@ function saveNewRoomToDatabase(params) {
 
   var Room = mongoose.model('Room');
   var User = mongoose.model('User');
+  var Message = mongoose.model('Message');
   var room = new Room();
   Promise.resolve(
     User.findById(params.idReceveur)
   ).then(function(user) {
-    room.name = params.idEnvoyeur + params.idReceveur;
-    room.message = params.message;
-    room.message.sender = user;
-
-    return room.save().then(function(res){
-      return res;
+    var mes = new Message();
+    mes.body = params.message;
+    return mes.save().then(function(mes) {
+      room.name = params.idEnvoyeur + params.idReceveur;
+      room.message = mes;
+      return room.save().then(function(res){
+        return res;
+      })
     })
+   
 
   });
 }

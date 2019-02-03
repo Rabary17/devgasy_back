@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 
 var MessageSchema = new mongoose.Schema({
-  body: String,
+  body: {type: String},
   createdAt: {type: Date, default: Date.now()}
 }, {timestamps: true});
 

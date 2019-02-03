@@ -4,7 +4,7 @@ var Message = require('./Message');
 
 var RoomSchema = new mongoose.Schema({
   name: {type: String, lowercase: true, unique: true},
-  message: [{ type: String }],
+  message: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
 }, {timestamps: true});
 
 // Requires population of author
