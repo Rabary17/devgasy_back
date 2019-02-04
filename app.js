@@ -141,6 +141,38 @@ io.on('connection', function (socket) {
 
     }
 
+    // Get all message on discussion
+
+    if (message.tag === 'getAllMessageDiscussion') {
+      var Room = mongoose.model('Room');
+      // Room.findOne({name: message.roomId}).then(function(room) {
+      //   console.log('le rrrrrrrrrrrrrrrrroooooooooom est '+ room);
+      // })
+
+      Promise.resolve(Room.findOne({name: message.roomId})).then(function(room){
+        return room.populate({
+          path: 'message',
+          populate: {
+            path: '_id'
+          },
+          options: {
+            sort: {
+              createdAt: 'asc'
+            }
+          }
+        }).execPopulate().then(function(res) {
+           for (var k in userConnected) {
+            if (k === message.userId) {
+              io.sockets.connected[userConnected[k].socketId].emit('allMessageRoom', res);
+              io.emit('allMessageRoom', res);
+              console.log('res '+res);
+              // console.log('socket user '+ userConnected[k].socketId);
+            }
+           }
+        });
+      }).catch();
+    }
+
     // then insert message to room
 
     console.log(message.message);
