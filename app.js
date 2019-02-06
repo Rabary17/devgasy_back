@@ -106,45 +106,38 @@ let userConnected = {};
 io.on('connection', function (socket) {
   
   // Gestion des utilisateurs
-  socket.on('userConnected', function(res){
-    // Notification coté front si nouvelle utilisateur expecté l'user qui vient de se connecter
-    socket.broadcast.emit('notifUserConnected', {message: res.username + 'est maintenant connécté'});
-    // envoi du message de bienvenue pour l'user connécté
-    io.sockets.connected[socket.id].emit('welcomeMessage', 'Hello, you\'re welcome' + res.username);
-    // mise à jour du tableau user connécté coté serveur
-    userConnected[res.user] = {id: res.user, username: res.username, socketId: socket.id};
-    // mise à jour du tableau user connécté coté client
-    io.emit('listeConnectedUser', userConnected);
-  })
+  socket.on('message', function(res){
+    if (res.tag === 'userConnected') {
+        userConnected[res.user] = {id: res.user, username: res.username, socketId: socket.id};
+        socket.broadcast.emit('notifUserConnected', {tag: 'notifUserConnected', body: res.username + 'est maintenant connécté'});
+        io.sockets.connected[socket.id].emit('welcomeMessage', {tag: 'welcomeMessage', body: 'Hello, you\'re welcome' + res.username});
+        console.log('111111111111111111111111111111');
+    }
 
-  // Gestion des messages privées
-  socket.on('message', (message) => {
-    // Persister les mp dans mongodb
-    // create room first
-    if ( message.tag === 'mp') {
+    if ( res.tag === 'mp') {
       for (var k in userConnected) {
-        console.log('userConnected k ' + JSON.stringify(userConnected[k]));
         if (k === message.idReceveur) {
-          io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
+          io.sockets.connected[userConnected[k].socketId].emit('message', res);
+          console.log('2222222222222222222222222222222222');
         } else if (userConnected.length === 1 && message.tag === 'mp') {
-          io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
+          io.sockets.connected[userConnected[k].socketId].emit('message', res);
+          console.log('3333333333333333333333333333333333333');
         }
       }
     }
 
-    // Liste des utilisateurs connécté on demand
-    if (message === 'getAllUserConnected') {
-        const tabAj = [];
-        for (const key in userConnected) {
-          if (userConnected.hasOwnProperty(key)) {
-            tabAj.push(userConnected[key]);
-          }
+    if (res.tag === 'getAllUserConnected') {
+      const tabAj = [{tag: 'getAllUserConnected'}];
+      for (const key in userConnected) {
+        if (userConnected.hasOwnProperty(key)) {
+          tabAj.push(userConnected[key]);
         }
-        io.emit('listeConnectedUser', tabAj);
+      }
+      io.emit('message', tabAj);
+      console.log('44444444444444444444444444444444444');
     }
 
-    // Gestion déconnection utilisateur
-    if (message.message === 'disconnect') {
+    if (res.tag === 'disconnect') {
       var tab = [];
         for (const key in userConnected) {
           if (userConnected.hasOwnProperty(key) && key !== message.idUser) {
@@ -152,6 +145,7 @@ io.on('connection', function (socket) {
           } else if (userConnected.hasOwnProperty(key) && key === message.idUser) {
             if (io.sockets.connected[userConnected[key]]) {
               io.sockets.connected[userConnected[key].socketId].disconnect();
+              console.log('5555555555555555555555555555555');
             } else {
               console.log('Socket not found');
             }
@@ -160,43 +154,9 @@ io.on('connection', function (socket) {
           }
         }
         userConnected = tab;
-        io.emit('listeConnectedUser', tab);
+        io.emit('message', tab);
         // console.log('liste updaté moins user déconnécté ' + JSON.stringify(tab));
     }
 
-  });
-
-
-
-
-
-  // déconnéction d'un utilisateur
-  // socket.on('disconnect', function(socket) {
-  //   io.sockets.connected[socket].disconnect();
-  // });
-
-
+  })
 });
-
-function saveNewRoomToDatabase(params) {
-
-  var Room = mongoose.model('Room');
-  var User = mongoose.model('User');
-  var Message = mongoose.model('Message');
-  var room = new Room();
-  Promise.resolve(
-    User.findById(params.idReceveur)
-  ).then(function(user) {
-    var mes = new Message();
-    mes.body = params.message;
-    return mes.save().then(function(mes) {
-      room.name = params.idEnvoyeur + params.idReceveur;
-      room.message = mes;
-      return room.save().then(function(res){
-        return res;
-      })
-    })
-   
-
-  });
-}
