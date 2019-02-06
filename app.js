@@ -122,79 +122,16 @@ io.on('connection', function (socket) {
     // Persister les mp dans mongodb
     // create room first
     if ( message.tag === 'mp') {
-      var roomName = message.idEnvoyeur + message.idReceveur;
-      var Room = mongoose.model('Room');
-      Room.findOne({name: roomName}).then(function(res) {
-        if(!res) { 
-          saveNewRoomToDatabase(message).then(function(res) {
-          });
-      } else if (res) {
-        var Message = mongoose.model('Message');
-        var mes = new Message();
-        mes.body = message.message;
-        mes.save().then(function(mes) {
-          res.mergeDiscussion(mes);
-        })
-      }
-
-      })
-
-    }
-
-    // Get all message on discussion
-
-    if (message.tag === 'getAllMessageDiscussion') {
-      var Room = mongoose.model('Room');
-      // Room.findOne({name: message.roomId}).then(function(room) {
-      //   console.log('le rrrrrrrrrrrrrrrrroooooooooom est '+ room);
-      // })
-
-      Promise.resolve(Room.findOne({name: message.roomId})).then(function(room){
-        return room.populate({
-          path: 'message',
-          populate: {
-            path: '_id'
-          },
-          options: {
-            sort: {
-              createdAt: 'asc'
-            }
-          }
-        }).execPopulate().then(function(res) {
-           for (var k in userConnected) {
-            if (k === message.userId) {
-              io.sockets.connected[userConnected[k].socketId].emit('allMessageRoom', res);
-              io.emit('allMessageRoom', res);
-              console.log('res '+res);
-              // console.log('socket user '+ userConnected[k].socketId);
-            }
-           }
-        });
-      }).catch();
-    }
-
-    // then insert message to room
-
-    console.log(message.message);
-    console.log('userConnected length' + JSON.stringify(userConnected.length));
-    console.log('message tag ' + JSON.stringify(message.tag));
-
       for (var k in userConnected) {
         console.log('userConnected k ' + JSON.stringify(userConnected[k]));
         if (k === message.idReceveur) {
-          console.log('condition socket destinataire  ' + userConnected[k].socketId);
           io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
-          console.log('Private message to ' + userConnected[k].socketId +' msg: ' + message.message);
         } else if (userConnected.length === 1 && message.tag === 'mp') {
-          console.log('user not found');
           io.sockets.connected[userConnected[k].socketId].emit('privateMessage', message);
-          console.log('force to emit');
         }
       }
+    }
 
-    // console.log('idReceveur' + idReceveur);
-    // io.emit('message', {type:'new-message', text: message});
-  
     // Liste des utilisateurs connécté on demand
     if (message === 'getAllUserConnected') {
         const tabAj = [];
@@ -213,13 +150,17 @@ io.on('connection', function (socket) {
           if (userConnected.hasOwnProperty(key) && key !== message.idUser) {
             tab.push(userConnected[key]);
           } else if (userConnected.hasOwnProperty(key) && key === message.idUser) {
-            io.sockets.connected[userConnected[k].socketId].disconnect();
-            console.log(userConnected[k].socketId + ' vient de se déconnécter');
+            if (io.sockets.connected[userConnected[key]]) {
+              io.sockets.connected[userConnected[key].socketId].disconnect();
+            } else {
+              console.log('Socket not found');
+            }
+            
+            console.log(userConnected[key].socketId + ' vient de se déconnécter');
           }
-          
         }
         userConnected = tab;
-        // io.emit('listeConnectedUser', tab);
+        io.emit('listeConnectedUser', tab);
         // console.log('liste updaté moins user déconnécté ' + JSON.stringify(tab));
     }
 
