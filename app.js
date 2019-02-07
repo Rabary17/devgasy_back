@@ -126,13 +126,9 @@ io.on('connection', function (socket) {
 
     if ( res.tag === 'mp') {
       for (var k in userConnected) {
-        if (k === message.idReceveur) {
+        if (k === res.idReceveur || k === res.idEnvoyeur) {
           io.sockets.connected[userConnected[k].socketId].emit('message', res);
-          console.log('2222222222222222222222222222222222');
-        } else if (userConnected.length === 1 && message.tag === 'mp') {
-          io.sockets.connected[userConnected[k].socketId].emit('message', res);
-          console.log('3333333333333333333333333333333333333');
-        }
+        } 
       }
     }
 
