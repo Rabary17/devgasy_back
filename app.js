@@ -109,8 +109,18 @@ io.on('connection', function (socket) {
   socket.on('message', function(res){
     if (res.tag === 'userConnected') {
         userConnected[res.user] = {id: res.user, username: res.username, socketId: socket.id};
-        socket.broadcast.emit('notifUserConnected', {tag: 'notifUserConnected', body: res.username + 'est maintenant connécté'});
-        io.sockets.connected[socket.id].emit('welcomeMessage', {tag: 'welcomeMessage', body: 'Hello, you\'re welcome' + res.username});
+        socket.broadcast.emit('message', {tag: 'notifUserConnected', body: res.username + 'est maintenant connécté'});
+        io.sockets.connected[socket.id].emit('message', {tag: 'welcomeMessage', body: 'Hello, you\'re welcome' + res.username});
+
+        // Envoi liste user connected
+        const tab = [];
+        for (const key in userConnected) {
+          if (userConnected.hasOwnProperty(key)) {
+            tab.push(userConnected[key]);
+          }
+        }
+        const msg = {tag: 'listUserConnected', users: tab}
+        io.emit('message', msg);
         console.log('111111111111111111111111111111');
     }
 
@@ -126,16 +136,16 @@ io.on('connection', function (socket) {
       }
     }
 
-    if (res.tag === 'getAllUserConnected') {
-      const tabAj = [{tag: 'getAllUserConnected'}];
-      for (const key in userConnected) {
-        if (userConnected.hasOwnProperty(key)) {
-          tabAj.push(userConnected[key]);
-        }
-      }
-      io.emit('message', tabAj);
-      console.log('44444444444444444444444444444444444');
-    }
+    // if (res.tag === 'getAllUserConnected') {
+    //   const tabAj = [{tag: 'getAllUserConnected'}];
+    //   for (const key in userConnected) {
+    //     if (userConnected.hasOwnProperty(key)) {
+    //       tabAj.push(userConnected[key]);
+    //     }
+    //   }
+    //   io.emit('message', tabAj);
+    //   console.log('44444444444444444444444444444444444');
+    // }
 
     if (res.tag === 'disconnect') {
       var tab = [];
