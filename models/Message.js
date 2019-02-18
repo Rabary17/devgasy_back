@@ -10,6 +10,8 @@ var MessageSchema = new mongoose.Schema({
 MessageSchema.methods.toJSONFor = function(user){
   return {
     id: this._id,
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     body: this.body,
     createdAt: this.createdAt,
   };
@@ -19,6 +21,8 @@ MessageSchema.methods.toAuthJSON = function(user){
   return {
     id: this.id,
     body: this.body,
+    sender: this.sender.toProfileJSONFor(user),
+    recipient: this.recipient.toProfileJSONFor(user),
     createdAt: this.createdAt
   };
 };
